@@ -1,32 +1,19 @@
 import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import MapComponent from './components/MapComponent'
 
 function App() {
-  const [count, setCount] = useState(0)
-  const [currentTime, setCurrentTime] = useState(0);
+  const [locations, setLocations] = useState([]);
 
   useEffect(() => {
-    fetch('/api/time').then(res => res.json()).then(data => {
-      setCurrentTime(data.time);
-    });
+    fetch('/api/locations')
+      .then(res => res.json())
+      .then(data => setLocations(data));
   }, []);
 
   return (
     <>
       <h1>Hitch</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>The current time is {new Date(currentTime * 1000).toLocaleString()}.</p>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <MapComponent locations={locations} />
     </>
   )
 }
