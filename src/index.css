@@ -615,6 +615,61 @@ html, body, #root { height: 100%; }
   font-weight: 500;
 }
 
+/* ── Auth modal tabs ─────────────────────────────── */
+.auth-tabs {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-sec);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.auth-tab.active {
+  background: var(--accent);
+  color: #f0f8e8;
+}
+
+/* ── Form error message ───────────────────────────── */
+.form-error {
+  font-size: 12.5px;
+  color: #c26060;
+  text-align: center;
+  padding: 2px 0;
+}
+
+/* ── Logout button ───────────────────────────────── */
+.btn-logout {
+  padding: 5px 12px;
+  background: transparent;
+  color: var(--text-sec);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+
+.btn-logout:hover {
+  background: var(--surface-2);
+  color: var(--text-pri);
+}
+
 /* ── Header presence badge ───────────────────────── */
 .header-presence {
   display: flex;

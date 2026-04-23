@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import MapComponent from './components/MapComponent'
 
 const SCHOOLS = [
@@ -14,7 +14,41 @@ const SCHOOLS = [
   { id: 10, name: "Hodan Nalayeh Secondary School",        lat: 43.8197, lng: -79.4463 },
 ]
 
+function decodeToken(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    if (payload.exp && payload.exp * 1000 < Date.now()) return null
+    return payload
+  } catch {
+    return null
+  }
+}
+
 function App() {
+  // ── Auth state ──────────────────────────────────────────────────────────────
+  const [token, setToken] = useState(() => {
+    const t = localStorage.getItem('hitch_token')
+    return t && decodeToken(t) ? t : null
+  })
+  const [currentUser, setCurrentUser] = useState(() => {
+    const t = localStorage.getItem('hitch_token')
+    return t ? decodeToken(t) : null
+  })
+  const [authMode, setAuthMode] = useState('login')
+  const [authName, setAuthName] = useState('')
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authError, setAuthError] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+
+  // Keep a ref so interval callbacks always read the current token
+  const tokenRef = useRef(token)
+  useEffect(() => { tokenRef.current = token }, [token])
+
+  const userId = currentUser?.user_id
+  const userName = currentUser?.name
+
+  // ── App state ───────────────────────────────────────────────────────────────
   const [locations] = useState(SCHOOLS)
   const [selected, setSelected] = useState(null)
   const [userLocation, setUserLocation] = useState(null)
@@ -26,59 +60,86 @@ function App() {
   const [carpoolSchool, setCarpoolSchool] = useState('')
   const [carpoolMsg, setCarpoolMsg] = useState('')
 
-  // Persistent user identity
-  const [userId] = useState(() => {
-    let id = localStorage.getItem('hitch_uid')
-    if (!id) { id = Math.random().toString(36).slice(2, 10); localStorage.setItem('hitch_uid', id) }
-    return id
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${tokenRef.current}`,
   })
-  const [userName, setUserName] = useState(() => localStorage.getItem('hitch_name') || '')
-  const [nameInput, setNameInput] = useState('')
 
-  // Broadcast own location to server every 15 s
+  const logout = () => {
+    localStorage.removeItem('hitch_token')
+    setToken(null)
+    setCurrentUser(null)
+    setMyRequest(null)
+    setCarpoolRequests([])
+    setOtherUsers([])
+  }
+
+  const handleAuthSubmit = async () => {
+    setAuthError('')
+    setAuthLoading(true)
+    try {
+      const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/register'
+      const body = authMode === 'login'
+        ? { email: authEmail, password: authPassword }
+        : { name: authName.trim(), email: authEmail, password: authPassword }
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok) { setAuthError(data.error || 'Something went wrong'); return }
+      localStorage.setItem('hitch_token', data.token)
+      setToken(data.token)
+      setCurrentUser(decodeToken(data.token))
+    } catch {
+      setAuthError('Network error, please try again')
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  // ── Broadcast own location every 15 s ───────────────────────────────────────
   useEffect(() => {
-    if (!userName || !userLocation) return
+    if (!token || !userLocation) return
     const send = () => fetch('/api/users/location', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: userId, name: userName, lat: userLocation.lat, lng: userLocation.lng }),
-    })
+      headers: authHeaders(),
+      body: JSON.stringify({ lat: userLocation.lat, lng: userLocation.lng }),
+    }).then(r => { if (r.status === 401) logout() })
     send()
     const id = setInterval(send, 15000)
     return () => clearInterval(id)
-  }, [userName, userLocation, userId])
+  }, [token, userLocation]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Poll other users every 10 s
+  // ── Poll other users every 10 s ─────────────────────────────────────────────
   useEffect(() => {
-    if (!userName) return
-    const fetch_ = () =>
-      fetch('/api/users/locations').then(r => r.json()).then(data =>
-        setOtherUsers(data.filter(u => u.user_id !== userId))
-      )
-    fetch_()
-    const id = setInterval(fetch_, 10000)
+    if (!token) return
+    const poll = () =>
+      fetch('/api/users/locations', { headers: authHeaders() })
+        .then(r => { if (r.status === 401) { logout(); return null } return r.json() })
+        .then(data => data && setOtherUsers(data.filter(u => u.user_id !== userId)))
+    poll()
+    const id = setInterval(poll, 10000)
     return () => clearInterval(id)
-  }, [userName, userId])
+  }, [token, userId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Poll carpool requests every 10 s
+  // ── Poll carpool requests every 10 s ────────────────────────────────────────
   useEffect(() => {
-    if (!userName) return
-    const fetch_ = () =>
-      fetch('/api/carpool/requests').then(r => r.json()).then(data => {
-        setCarpoolRequests(data)
-        setMyRequest(data.find(r => r.user_id === userId) || null)
-      })
-    fetch_()
-    const id = setInterval(fetch_, 10000)
+    if (!token) return
+    const poll = () =>
+      fetch('/api/carpool/requests', { headers: authHeaders() })
+        .then(r => { if (r.status === 401) { logout(); return null } return r.json() })
+        .then(data => {
+          if (!data) return
+          setCarpoolRequests(data)
+          setMyRequest(data.find(r => r.user_id === userId) || null)
+        })
+    poll()
+    const id = setInterval(poll, 10000)
     return () => clearInterval(id)
-  }, [userName, userId])
-
-  const saveName = () => {
-    const n = nameInput.trim()
-    if (!n) return
-    localStorage.setItem('hitch_name', n)
-    setUserName(n)
-  }
+  }, [token, userId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const submitCarpoolRequest = () => {
     if (!carpoolSchool || !userLocation) return
@@ -86,9 +147,8 @@ function App() {
     if (!school) return
     fetch('/api/carpool/request', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify({
-        user_id: userId, name: userName,
         lat: userLocation.lat, lng: userLocation.lng,
         school_id: school.id, school_name: school.name,
         message: carpoolMsg,
@@ -104,14 +164,17 @@ function App() {
 
   const cancelCarpoolRequest = () => {
     if (!myRequest) return
-    fetch(`/api/carpool/request/${myRequest.id}`, { method: 'DELETE' }).then(() => {
+    fetch(`/api/carpool/request/${myRequest.id}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    }).then(() => {
       setMyRequest(null)
       setCarpoolRequests(prev => prev.filter(r => r.id !== myRequest.id))
     })
   }
 
-  // ── Name gate ──────────────────────────────────────────────────────────────
-  if (!userName) {
+  // ── Auth gate ───────────────────────────────────────────────────────────────
+  if (!token) {
     return (
       <div className="app">
         <div className="name-modal-overlay">
@@ -124,23 +187,60 @@ function App() {
               </svg>
             </div>
             <h2 className="name-modal-title">Welcome to Hitch</h2>
-            <p className="name-modal-sub">Enter your name so peers can find you.</p>
+
+            <div className="auth-tabs">
+              <button
+                className={`auth-tab ${authMode === 'login' ? 'active' : ''}`}
+                onClick={() => { setAuthMode('login'); setAuthError('') }}
+              >Log in</button>
+              <button
+                className={`auth-tab ${authMode === 'signup' ? 'active' : ''}`}
+                onClick={() => { setAuthMode('signup'); setAuthError('') }}
+              >Sign up</button>
+            </div>
+
+            {authMode === 'signup' && (
+              <input
+                className="name-input"
+                placeholder="Your name"
+                value={authName}
+                onChange={e => setAuthName(e.target.value)}
+                autoFocus
+              />
+            )}
             <input
               className="name-input"
-              placeholder="Your name"
-              value={nameInput}
-              onChange={e => setNameInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && saveName()}
-              autoFocus
+              type="email"
+              placeholder="Email address"
+              value={authEmail}
+              onChange={e => setAuthEmail(e.target.value)}
+              autoFocus={authMode === 'login'}
             />
-            <button className="btn-primary btn-full" onClick={saveName}>Get started</button>
+            <input
+              className="name-input"
+              type="password"
+              placeholder="Password"
+              value={authPassword}
+              onChange={e => setAuthPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleAuthSubmit()}
+            />
+
+            {authError && <p className="form-error">{authError}</p>}
+
+            <button
+              className="btn-primary btn-full"
+              onClick={handleAuthSubmit}
+              disabled={authLoading}
+            >
+              {authLoading ? 'Please wait…' : authMode === 'login' ? 'Log in' : 'Create account'}
+            </button>
           </div>
         </div>
       </div>
     )
   }
 
-  // ── Main UI ────────────────────────────────────────────────────────────────
+  // ── Main UI ─────────────────────────────────────────────────────────────────
   const otherCarpools = carpoolRequests.filter(r => r.user_id !== userId)
 
   return (
@@ -161,6 +261,7 @@ function App() {
           <span className="presence-dot" />
           <span className="presence-name">{userName}</span>
         </div>
+        <button className="btn-logout" onClick={logout}>Log out</button>
       </header>
 
       <div className="body">

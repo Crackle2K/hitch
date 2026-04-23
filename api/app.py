@@ -4,15 +4,27 @@ from dotenv import load_dotenv
 import os
 import time
 import uuid
+import bcrypt
+import jwt
+from functools import wraps
+from datetime import datetime, timedelta, timezone
 
 load_dotenv()
 
 app = Flask(__name__)
 
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
+
 client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017"))
 db = client["hitch"]
 user_locations_col = db["user_locations"]
 carpool_requests_col = db["carpool_requests"]
+users_col = db["users"]
+
+try:
+    users_col.create_index("email", unique=True)
+except Exception as e:
+    print(f"Warning: could not create users index: {e}")
 
 # Coordinates derived from verified school addresses (YRDSB secondary schools)
 locations = [
@@ -39,6 +51,84 @@ locations = [
 ]
 
 
+# ── Auth middleware ───────────────────────────────────────────────────────────
+
+def require_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.headers.get('Authorization', '')
+        if not auth.startswith('Bearer '):
+            return jsonify({'error': 'missing token'}), 401
+        token = auth[7:]
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'token expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'invalid token'}), 401
+        request.user = payload
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ── Auth routes ───────────────────────────────────────────────────────────────
+
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    data = request.get_json() or {}
+    name = (data.get('name') or '').strip()
+    email = (data.get('email') or '').strip().lower()
+    password = data.get('password') or ''
+
+    if not name or not email or not password:
+        return jsonify({'error': 'name, email, and password are required'}), 400
+    if '@' not in email or '.' not in email:
+        return jsonify({'error': 'invalid email address'}), 400
+    if len(password) < 6:
+        return jsonify({'error': 'password must be at least 6 characters'}), 400
+
+    pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    user_id = uuid.uuid4().hex
+
+    try:
+        users_col.insert_one({
+            'user_id': user_id,
+            'name': name,
+            'email': email,
+            'password_hash': pw_hash,
+            'created_at': time.time(),
+        })
+    except Exception:
+        return jsonify({'error': 'email already registered'}), 409
+
+    token = jwt.encode(
+        {'user_id': user_id, 'name': name, 'email': email,
+         'exp': datetime.now(timezone.utc) + timedelta(days=30)},
+        SECRET_KEY, algorithm='HS256'
+    )
+    return jsonify({'token': token, 'name': name, 'user_id': user_id})
+
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.get_json() or {}
+    email = (data.get('email') or '').strip().lower()
+    password = data.get('password') or ''
+
+    user = users_col.find_one({'email': email})
+    if not user or not bcrypt.checkpw(password.encode(), user['password_hash'].encode()):
+        return jsonify({'error': 'invalid email or password'}), 401
+
+    token = jwt.encode(
+        {'user_id': user['user_id'], 'name': user['name'], 'email': email,
+         'exp': datetime.now(timezone.utc) + timedelta(days=30)},
+        SECRET_KEY, algorithm='HS256'
+    )
+    return jsonify({'token': token, 'name': user['name'], 'user_id': user['user_id']})
+
+
+# ── Public routes ─────────────────────────────────────────────────────────────
+
 @app.route('/api/locations')
 def get_locations():
     return jsonify(locations)
@@ -49,17 +139,17 @@ def get_time():
     return jsonify({"time": time.time()})
 
 
-# ── User presence ────────────────────────────────────────────────────────────
+# ── Protected: user presence ──────────────────────────────────────────────────
 
 @app.route('/api/users/location', methods=['POST'])
+@require_auth
 def update_user_location():
-    data = request.get_json()
-    user_id = data.get('user_id')
-    if not user_id:
-        return jsonify({'error': 'missing user_id'}), 400
+    user_id = request.user['user_id']
+    name = request.user['name']
+    data = request.get_json() or {}
     doc = {
         'user_id': user_id,
-        'name': data.get('name', 'Anonymous'),
+        'name': name,
         'lat': data['lat'],
         'lng': data['lng'],
         'updated_at': time.time(),
@@ -69,15 +159,17 @@ def update_user_location():
 
 
 @app.route('/api/users/locations', methods=['GET'])
+@require_auth
 def get_user_locations():
     cutoff = time.time() - 120
     active = list(user_locations_col.find({'updated_at': {'$gt': cutoff}}, {'_id': 0}))
     return jsonify(active)
 
 
-# ── Carpool requests ─────────────────────────────────────────────────────────
+# ── Protected: carpool requests ───────────────────────────────────────────────
 
 @app.route('/api/carpool/requests', methods=['GET'])
+@require_auth
 def get_carpool_requests():
     cutoff = time.time() - 7200
     active = list(carpool_requests_col.find({'created_at': {'$gt': cutoff}}, {'_id': 0}))
@@ -85,13 +177,16 @@ def get_carpool_requests():
 
 
 @app.route('/api/carpool/request', methods=['POST'])
+@require_auth
 def create_carpool_request():
-    data = request.get_json()
+    user_id = request.user['user_id']
+    name = request.user['name']
+    data = request.get_json() or {}
     req_id = uuid.uuid4().hex[:8]
     doc = {
         'id': req_id,
-        'user_id': data['user_id'],
-        'name': data.get('name', 'Anonymous'),
+        'user_id': user_id,
+        'name': name,
         'lat': data['lat'],
         'lng': data['lng'],
         'school_id': data['school_id'],
@@ -105,8 +200,10 @@ def create_carpool_request():
 
 
 @app.route('/api/carpool/request/<req_id>', methods=['DELETE'])
+@require_auth
 def cancel_carpool_request(req_id):
-    carpool_requests_col.delete_one({'id': req_id})
+    user_id = request.user['user_id']
+    carpool_requests_col.delete_one({'id': req_id, 'user_id': user_id})
     return jsonify({'ok': True})
 
 
