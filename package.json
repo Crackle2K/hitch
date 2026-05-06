@@ -11,7 +11,7 @@
     "api": "cd api && ..\\venv\\Scripts\\python -m flask run"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.105.1",
+    "@supabase/supabase-js": "^2.105.3",
     "mapbox-gl": "^3.22.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
