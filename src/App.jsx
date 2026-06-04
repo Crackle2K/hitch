@@ -177,7 +177,7 @@ function SchoolsTab({ locations, selected, onSelect }) {
               <span className={cn(
                 'w-2 h-2 rounded-full flex-shrink-0 transition-all',
                 selected?.id === loc.id
-                  ? 'bg-[#00B14F]'
+                  ? 'bg-brand-green'
                   : 'bg-gray-300'
               )} />
               <span className={cn(
