@@ -1,41 +1,39 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.10 0.02 270);
-  --foreground: oklch(0.92 0.02 270);
-  --card: oklch(0.13 0.025 270);
-  --card-foreground: oklch(0.92 0.02 270);
-  --popover: oklch(0.13 0.025 270);
-  --popover-foreground: oklch(0.92 0.02 270);
-  --primary: oklch(0.55 0.22 290);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.18 0.03 270);
-  --secondary-foreground: oklch(0.75 0.04 270);
-  --muted: oklch(0.18 0.03 270);
-  --muted-foreground: oklch(0.60 0.04 270);
-  --accent: oklch(0.18 0.03 270);
-  --accent-foreground: oklch(0.92 0.02 270);
-  --destructive: oklch(0.55 0.22 15);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.22 0.03 270);
-  --input: oklch(0.22 0.03 270);
-  --ring: oklch(0.55 0.22 290);
-  --radius: 0.625rem;
+  --background: #F6F6F6;
+  --foreground: #111111;
+  --card: #FFFFFF;
+  --card-foreground: #111111;
+  --popover: #FFFFFF;
+  --popover-foreground: #111111;
+  --primary: #000000;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F3F3F3;
+  --secondary-foreground: #333333;
+  --muted: #F3F3F3;
+  --muted-foreground: #6B6B6B;
+  --accent: #F3F3F3;
+  --accent-foreground: #111111;
+  --destructive: #D90B2C;
+  --destructive-foreground: #FFFFFF;
+  --border: #E0E0E0;
+  --input: #E8E8E8;
+  --ring: #000000;
+  --radius: 0.5rem;
 
   /* Brand tokens */
-  --brand-purple: #7c3aed;
-  --brand-purple-lt: #a78bfa;
-  --brand-purple-dk: #6025c4;
-  --brand-teal: #06d6a0;
-  --brand-teal-dk: #04a87e;
-  --brand-pink: #f72585;
-  --brand-gold: #ffd166;
+  --brand-green: #00B14F;
+  --brand-green-dk: #008C3C;
+  --brand-black: #000000;
+  --brand-gray: #6B6B6B;
+  --brand-red: #D90B2C;
 
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 @theme inline {
@@ -58,11 +56,11 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: 'Outfit', system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
+  --font-sans: 'Inter', system-ui, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -70,50 +68,50 @@
 html, body, #root { height: 100%; }
 
 body {
-  background: oklch(0.10 0.02 270);
-  color: oklch(0.92 0.02 270);
-  font-family: 'Outfit', system-ui, sans-serif;
+  background: #F6F6F6;
+  color: #111111;
+  font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 /* ── Map markers ─────────────────────────────────── */
 .school-marker {
-  width: 14px;
-  height: 14px;
-  background: var(--brand-purple);
+  width: 12px;
+  height: 12px;
+  background: #000000;
   border-radius: 50%;
-  border: 2.5px solid oklch(0.10 0.02 270);
-  box-shadow: 0 0 8px rgba(124,58,237,0.7);
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
   cursor: pointer;
   transition: transform 0.15s, background 0.15s;
 }
 
 .school-marker:hover,
 .school-marker.active {
-  transform: scale(1.55);
-  background: var(--brand-teal);
-  box-shadow: 0 0 12px rgba(6,214,160,0.8);
+  transform: scale(1.6);
+  background: var(--brand-green);
+  box-shadow: 0 1px 6px rgba(0,177,79,0.5);
 }
 
 .user-marker {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--brand-pink);
-  border: 3px solid oklch(0.10 0.02 270);
-  box-shadow: 0 0 0 3px rgba(247,37,133,0.35), 0 0 12px rgba(247,37,133,0.5);
+  background: var(--brand-green);
+  border: 3px solid #FFFFFF;
+  box-shadow: 0 0 0 2px rgba(0,177,79,0.25), 0 2px 6px rgba(0,0,0,0.2);
 }
 
 .peer-marker {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--brand-purple) 0%, var(--brand-pink) 100%);
-  border: 2.5px solid oklch(0.10 0.02 270);
-  box-shadow: 0 0 10px rgba(124,58,237,0.5);
+  background: #000000;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   color: #fff;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -122,29 +120,29 @@ body {
 }
 
 .carpool-marker {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: var(--brand-gold);
-  border: 2.5px solid oklch(0.10 0.02 270);
-  box-shadow: 0 0 8px rgba(255,209,102,0.6);
+  background: #333333;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
   cursor: default;
 }
 
 .carpool-marker.mine {
-  background: var(--brand-teal);
-  box-shadow: 0 0 8px rgba(6,214,160,0.7);
+  background: var(--brand-green);
+  box-shadow: 0 1px 4px rgba(0,177,79,0.4);
 }
 
 /* ── Mapbox popup ────────────────────────────────── */
 .mapboxgl-popup-content {
   padding: 10px 14px !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 0 20px rgba(124,58,237,0.35) !important;
-  font-family: 'Outfit', system-ui, sans-serif !important;
-  background: oklch(0.15 0.03 270) !important;
-  border: 1px solid rgba(124,58,237,0.4) !important;
-  color: oklch(0.92 0.02 270) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E0E0E0 !important;
+  color: #111111 !important;
 }
 
 .mapboxgl-popup-tip { display: none !important; }
@@ -153,59 +151,52 @@ body {
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
+  color: #111111;
 }
 
 /* ── Mapbox controls ─────────────────────────────── */
 .mapboxgl-ctrl-group {
-  border-radius: 12px !important;
+  border-radius: 8px !important;
   overflow: hidden;
-  background: oklch(0.13 0.025 270) !important;
-  border: 1px solid oklch(0.22 0.03 270) !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E0E0E0 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
 }
 
 .mapboxgl-ctrl-group button {
-  background: oklch(0.13 0.025 270) !important;
-  color: oklch(0.92 0.02 270) !important;
+  background: #FFFFFF !important;
+  color: #111111 !important;
 }
 
 .mapboxgl-ctrl-group button:hover {
-  background: oklch(0.18 0.03 270) !important;
+  background: #F3F3F3 !important;
 }
 
 /* ── Presence dot animation ──────────────────────── */
 @keyframes pulse-dot {
-  0%, 100% { box-shadow: 0 0 6px rgba(6,214,160,0.6); }
-  50%       { box-shadow: 0 0 14px rgba(6,214,160,0.9); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,177,79,0.4); }
+  50%       { box-shadow: 0 0 0 4px rgba(0,177,79,0); }
 }
 
 .presence-dot {
   animation: pulse-dot 2s ease-in-out infinite;
 }
 
-/* ── Gradient text ───────────────────────────────── */
-.gradient-text {
-  background: linear-gradient(135deg, #a78bfa 0%, #06d6a0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 /* ── Scrollbar styling ───────────────────────────── */
 .custom-scroll::-webkit-scrollbar { width: 4px; }
 .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-.custom-scroll::-webkit-scrollbar-thumb { background: oklch(0.22 0.03 270); border-radius: 2px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #D8D8D8; border-radius: 2px; }
 
 /* ── Chat bubble ─────────────────────────────────── */
 .chat-bubble-mine {
-  background: linear-gradient(135deg, var(--brand-purple) 0%, #9d4edd 100%);
-  color: #fff;
+  background: #000000;
+  color: #FFFFFF;
   border-radius: 18px 18px 4px 18px;
-  box-shadow: 0 2px 8px rgba(124,58,237,0.4);
 }
 
 .chat-bubble-theirs {
-  background: oklch(0.18 0.03 270);
-  color: oklch(0.92 0.02 270);
-  border: 1px solid oklch(0.22 0.03 270);
+  background: #F3F3F3;
+  color: #111111;
+  border: 1px solid #E0E0E0;
   border-radius: 18px 18px 18px 4px;
 }

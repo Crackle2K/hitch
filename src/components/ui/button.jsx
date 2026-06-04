@@ -9,19 +9,19 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-lg shadow-violet-900/40 hover:opacity-90 hover:-translate-y-px active:translate-y-0',
+          'bg-black text-white hover:bg-gray-800 active:bg-gray-900',
         destructive:
-          'border border-pink-500/40 text-pink-400 hover:bg-pink-500/10',
+          'border border-red-200 text-red-600 hover:bg-red-50',
         outline:
-          'border border-white/10 bg-transparent text-slate-300 hover:bg-white/5 hover:text-white hover:border-violet-400/50',
+          'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400',
         secondary:
-          'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white',
+          'bg-gray-100 text-gray-700 hover:bg-gray-200',
         ghost:
-          'text-slate-400 hover:bg-white/5 hover:text-white',
+          'text-gray-500 hover:bg-gray-100 hover:text-gray-900',
         link:
-          'text-violet-400 underline-offset-4 hover:underline',
+          'text-black underline-offset-4 hover:underline',
         teal:
-          'bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-lg shadow-teal-900/40 hover:opacity-90',
+          'bg-[#00B14F] text-white hover:bg-[#008C3C] active:bg-[#007A36]',
       },
       size: {
         default: 'h-9 px-4 py-2',

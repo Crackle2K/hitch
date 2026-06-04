@@ -61,15 +61,15 @@ export default function ChatPanel({ friend, myId, authHeaders, onClose }) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[oklch(0.12_0.025_270)] border-l border-white/8">
+    <div className="flex flex-col h-full bg-white border-l border-gray-200">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-white/8 flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 flex-shrink-0">
         <Avatar className="h-8 w-8">
           <AvatarFallback className="text-xs">{friend.name[0].toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white truncate">{friend.name}</p>
-          <p className="text-xs text-slate-500">Friend</p>
+          <p className="text-sm font-semibold text-gray-900 truncate">{friend.name}</p>
+          <p className="text-xs text-gray-400">Friend</p>
         </div>
         <Button variant="ghost" size="icon-sm" onClick={onClose}>
           <X className="h-4 w-4" />
@@ -79,7 +79,7 @@ export default function ChatPanel({ friend, myId, authHeaders, onClose }) {
       {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-3">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-32 gap-2 text-slate-500">
+          <div className="flex flex-col items-center justify-center h-32 gap-2 text-gray-400">
             <MessageCircle className="h-8 w-8 opacity-30" />
             <p className="text-xs">No messages yet. Say hi!</p>
           </div>
@@ -98,7 +98,7 @@ export default function ChatPanel({ friend, myId, authHeaders, onClose }) {
                     <div className={cn('px-3 py-2 text-sm', isMine ? 'chat-bubble-mine' : 'chat-bubble-theirs')}>
                       {msg.content}
                     </div>
-                    <p className={cn('text-[10px] text-slate-600 mt-0.5', isMine ? 'text-right' : 'text-left')}>
+                    <p className={cn('text-[10px] text-gray-400 mt-0.5', isMine ? 'text-right' : 'text-left')}>
                       {formatTime(msg.created_at)}
                     </p>
                   </div>
@@ -111,7 +111,7 @@ export default function ChatPanel({ friend, myId, authHeaders, onClose }) {
       </ScrollArea>
 
       {/* Input */}
-      <div className="flex items-center gap-2 px-4 py-3 border-t border-white/8 flex-shrink-0">
+      <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-200 flex-shrink-0">
         <Input
           className="flex-1 text-sm"
           placeholder={`Message ${friend.name}…`}
