@@ -28,7 +28,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^1.17.0",
     "mapbox-gl": "^3.24.0",
-    "react": "^19.2.5",
+    "react": "^19.2.7",
     "react-dom": "^19.2.6",
     "react-map-gl": "^8.1.1",
     "tailwind-merge": "^3.6.0",
@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/react": "^19.2.7",
+    "@types/react": "^19.2.16",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
     "eslint": "^10.4.1",
